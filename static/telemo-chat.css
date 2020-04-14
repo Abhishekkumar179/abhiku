@@ -1,0 +1,276 @@
+body{
+    background-color: darkblue;
+}
+#telemo-chat {
+    /*background-color: ghostwhite;*/
+    float: left;
+    position: fixed;
+    /* height: 100%; */
+    /* right: 0px; */
+    top: 50px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+#telemo-chat-username{
+    background-color: #D3D3D3;
+    color: white;
+    width: 100%;
+    text-align: center;
+    /* position: fixed; */
+    height: 9%;
+    border-radius: 15px;
+    margin: 1px;
+}
+#telemo-chat-list{
+    background-color: #D3D3D3;
+    text-decoration-color: white;
+     display: contents; 
+    height: 80%;
+    width: 300px;
+    /* padding-top: 35px; */
+    /* padding-bottom: 0%; */
+    border-radius: 15px;
+    overflow-y: scroll;
+}
+#contact-list{
+    color:white;
+    margin-block-start: 20px;
+    margin-left: 10px;
+    font-size: 30px;
+}
+.chat-sidebar
+{
+width: 200px;
+position: fixed;
+height: 100%;
+right: 0px;
+top: 0px;
+padding-top: 10px;
+padding-bottom: 10px;
+border: 1px solid rgba(29, 49, 91, .3);
+}
+
+.sd-name {
+    height: 20px;
+    margin: 1%;
+    background-color: #3b4398;
+    padding: 5px;
+    border-radius: 10px;
+    font-size:small;
+}
+
+.sd-name a span
+{
+padding-left: 5px;
+}
+
+.sd-name a:hover
+    {
+    background-color:#ed5278;
+    font-size: medium;
+    }
+    .sd-name a
+    {
+    margin: 15px;
+    font-size: larger;
+    text-decoration: none;
+    /* padding: 3px; */
+    border-radius: 15px;
+    /*background-color: #3d4499;*/
+    color: white;
+    font-weight: 900;
+    /* height: 20px;*/
+    }
+
+.sd-name img
+{
+width: 32px;
+height: 32px;
+vertical-align:middle;
+}
+
+.popup-box{
+/*display: none;*/
+position: fixed;
+bottom: 0px;
+right: 220px;
+height: 285px;
+width: 300px;
+background-color: white;
+border-radius: 5px;
+box-sizing: border-box;
+-webkit-box-sizing: border-box;
+}
+/*.popup-box .popup-head a
+{
+margin: 15px;
+font-size: larger;
+text-decoration: none;
+border-radius: 15px;
+color: white;
+font-weight: bold;
+color:black;
+font-family: -webkit-body;
+}*/
+.popup-head {
+height: 20px;
+margin: 1%;
+background-color: inherit;
+padding: 5px;
+border-radius: inherit;
+font-size:small;
+}
+.popup-head .popupprofileimg {
+    padding: 3px;
+    width: 15px;
+    height: inherit;
+    float: left;
+}
+.popup-head .popupprofileimg img {
+    height: inherit;
+}
+.popup-box .popup-head .popupheadname {
+    margin: 1px;
+    padding: 3px;
+    /* border-radius: 15px; */
+    float: left;
+}
+.popup-box .popup-head .popupheadname a {
+    color: black;
+    text-decoration: none;
+}
+.closepop
+{
+float: right;
+opacity: 0.5;
+}
+
+.closepop a
+{
+text-decoration: none;
+color: inherit;
+}
+.chat-box {
+height: 60% ;
+margin-top: 1%;
+overflow-y: scroll;
+padding:5%;
+background-color: ghostwhite;
+flex-direction: column;
+/*word-wrap: break-word;*/
+}
+.sendMessageBox {
+margin: 5px;
+height: 30px;
+}
+.sendMessageBox .basicsendMessageBox #sendMessageInputBox {
+    font-family:-webkit-body;
+float: left;
+width: 80%;
+text-align: right;
+border-radius: 35px;
+/*padding:5px;*/
+border-radius: 1px darkgrey solid;
+}
+.basicsendMessageBox a {
+float: right;
+    border-radius: 8px;
+    background-color: cornflowerblue;
+    text-align: center;
+    width: 22px;
+    height: 23px;
+    margin: 0px;
+    /* height: 23px; */
+    color: white;
+    text-decoration: none;
+    /* padding: 3px; */
+    font-family: sans-serif;
+    font-size: x-large;
+}
+.basicsendMessageBox {
+height: 18px;
+display: flow-root;
+}
+.complimentarysendMessageBox #fileSelectbutton {
+    width: min-content;
+    margin: 4px;
+}
+.sendMessageBox a:hover {
+background-color: blue;
+font-weight: bolder;
+}
+.chat-box .startMessageNode {
+text-align: center;
+height: 35%;
+}
+.startMessageNode .startMessageData {
+width: 30%;
+background-color: darkgrey;
+border-radius: 10px;
+margin: 5px;
+word-break: break-word;
+display: inline-block;
+padding: 5px;
+height: -webkit-fill-available;
+font-size: x-small;
+}
+
+.messageNode {
+width: 100%;
+display: flow-root;
+flex-direction: column-reverse;
+}
+.sentData {
+float: right;
+height: -webkit-fill-available;
+background-color: #ffffff;
+padding: 2%;
+border-radius: 15px;
+margin: 2px;
+}
+.recievedData {
+float: left;
+height: -webkit-fill-available;
+background-color: #999ad7;
+padding: 3%;
+border-radius: 15px;
+}
+p.messageText {
+margin: 0px;
+float: center;
+text-align: center;
+background-color: inherit;
+border-radius: 20px;
+word-break: break-all;
+border: 5px;
+height: 75%;
+border-bottom: -1px;
+}
+.filedata {
+    /* width: 100%; */
+    display: flex;
+    background-color: lightgrey;
+    border: 1px solid black;
+}
+.filedata a {
+    width: fit-content;
+    text-decoration: none;
+    background-color: white;
+    border-radius: 10px;
+    height: fit-content;
+    text-align: center;
+    color: black;
+    padding: 2px;
+}
+.filedata .filename {
+    width: 70%;
+    height: fit-content;
+    margin: 2px;
+    padding: 2px;
+}
+.sentData img {
+float: right;
+height: 15px;
+margin: 0px;
+right: 0px;
+}
