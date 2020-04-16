@@ -291,6 +291,23 @@ const wsuri = "ws://localhost:1234/main";
           }
         } 
       }
+      var flag=false;
+      function expandMessages(from){
+        var pop=document.getElementById(from);
+        var chatbox=document.getElementById(from).children[1];
+        var sendMessageForm=document.getElementById(from).children[2];
+        if(!flag){
+          chatbox.setAttribute("style","display:flex");
+          sendMessageForm.setAttribute("style","display:flex");
+          flag=true;
+          return;  
+        }else{
+          pop.setAttribute("style","height:10px")
+          chatbox.setAttribute("style","display:none");
+          sendMessageForm.setAttribute("style","display:none");
+          flag=false;
+          return;
+        }
       function display_popups(){
         var right = 220;
         var iii = 0;
