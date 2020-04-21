@@ -1,0 +1,7 @@
+0000000000000000000000000000000000000000 62658d06106e465bdbca41687c6742793b37fba7 patabhi <abhishekpathania.407@gmail.com> 1585150447 +0530	commit (initial): First commit
+62658d06106e465bdbca41687c6742793b37fba7 aabe11ef500b93ebcd0e3188b01ce709b737f30c abhishekStarTele <abhiskek@startelelogic.com> 1585151801 +0530	commit: First commit
+aabe11ef500b93ebcd0e3188b01ce709b737f30c 0a9a300de725be2b2d2b0d05ec97c58254903aba abhishekStarTele <abhiskek@startelelogic.com> 1585236105 +0530	commit: Removed bugs
+0a9a300de725be2b2d2b0d05ec97c58254903aba 361021ecab20526abf38f502e7c62e56274e2cb8 abhishekStarTele <abhiskek@startelelogic.com> 1585378743 +0530	commit: removed somefiles, bugs.
+361021ecab20526abf38f502e7c62e56274e2cb8 cffe2aaedf2e2217546b629fdde606ecb1662e03 abhishekStarTele <abhiskek@startelelogic.com> 1585756128 +0530	commit: add reciepts functionality ,auto registration process on detection of socket close or network problems
+cffe2aaedf2e2217546b629fdde606ecb1662e03 ecb0e00fc9d14d4257d82d3c0f0e4c22501b8a69 abhishekStarTele <abhiskek@startelelogic.com> 1585757531 +0530	commit (merge): added reciepts functionality
+ecb0e00fc9d14d4257d82d3c0f0e4c22501b8a69 ea86650f6e4e36305a9391511516136db52ab095 abhishekStarTele <abhiskek@startelelogic.com> 1586531174 +0530	commit: file upload added
