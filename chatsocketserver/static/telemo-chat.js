@@ -1,5 +1,4 @@
 
-
 const wsuri = "ws://localhost:1234/main";
       var sock = null
       var flag1=false;
@@ -7,11 +6,10 @@ const wsuri = "ws://localhost:1234/main";
           this.sock = new WebSocket(wsuri);
           this.sock.onopen = function() {
             flag1=true;
-             console.log("connected! "+flag1);
+            
             console.log(sock["url"]);
             if(!id){
-              // alert("id not set"+id);
-              return;
+              alert("id not set"+id);
             }
             registerSend(id);
             };
@@ -40,22 +38,22 @@ const wsuri = "ws://localhost:1234/main";
       }
       function sockThrowDataToServer(data){
         sock.send(data);
-        // return;
+        
       }
       function registerSend(name){
-       // alert("sending: "+name);
+        
         recieveRegisterMessages();
         sockThrowDataToServer(name);
       }
-      function recieveRegisterMessages(){
+      function recieveRegisterMessages(){        
         sock.onmessage = function(e){
             var rsp=JSON.parse(e.data);
             if(rsp["statusmsg"]=="invalid user"){
+              window.location.assign("invaliduser");
               alert("INVALID USER");
+              return;
             }else{
-              // flag1=true;
-              // alert("START MESSAGING");
-              recieveMessages();
+            recieveMessages();
             }
           };
           sock.onerror = function(error) {
@@ -65,13 +63,14 @@ const wsuri = "ws://localhost:1234/main";
       function validateForm(){
         var x = document.getElementById("telemo-chat").getAttribute("name");
         if(!x){
-          // alert("PLEASE REGISTER YOURSELF");
+         
           return;
         }
-        // alert("wait");
+       
         registerSend(x);
       }
       var finalfile=null;
+      var file=null;
       function sendMessage(x){
         var y =userId;
         var sendMsgEle=document.getElementById(x).children[2];
@@ -81,66 +80,116 @@ const wsuri = "ws://localhost:1234/main";
           alert("PLEASE INPUT CONTACT TO");
           return;
         }
+        var msg;
         if(!z){
           if(finalfile){
-
+            msg={"message_type":"2","to":x,"from":y,"body":"","file":finalfile,"message_id":"","message_stage_id":""}
+           
           }else{
+            
             return;
           }
+        }else{
+          if(!finalfile){
+            msg={"message_type":"1","to":x,"from":y,"body":z,"message_id":"","message_stage_id":""};
+            // alert("no file");
+            finalfile="";
+          }else{
+            msg={"message_type":"2","to":x,"from":y,"body":z,"file":finalfile,"message_id":"","message_stage_id":""};
+          }
         }
-        if(!finalfile){
-          finalfile="";
-        }
-        var msg={"message_type":"1","to":x,"from":y,"body":z,"file":finalfile,"message_id":"","message_stage_id":""};
         addMessageToContact(msg);
-        // sockThrowDataToServer(msg);
-        // this.sock.send(msg);
         recieveMessages();
         finalfile=null;
         sock.onerror = function(error) {
           console.log('WebSocket Error: ' + error);
         };
       }
-      function popupboxInitEventlistener(){
-        const uploadInput=document.getElementById("uploadInput");
-        const fileSelectbutton=document.getElementById("fileSelectbutton");
-        fileSelectbutton.addEventListener("click",function(){ uploadInput.click(); });
-        uploadInput.addEventListener("change",function(){
-          if(uploadInput.value){
-            var filename=uploadInput.value.match(/[\/\\]([\w\d\s\.\-\(\)]+)$/)[1];
-            var fileextension = filename.match(/\.[0-9a-z]+$/i);
-            console.log(filename);
-            console.log(fileextension);
-            fileSelectbutton.innerHTML="&#128210";
-            var file=uploadInput.files[0];
-            console.log(file.name);
-            console.log(file.type);
-            console.log(file.size);
-            var reader = new FileReader();
-            var rawData = new ArrayBuffer();            
-            reader.loadend = function() {
-            }
-            reader.onload = function(e) {
-                rawData = e.target.result;
-                var bytesfile = new Uint8Array(rawData);
-                console.log(bytesfile);
-                finalfile='{"filename":"'+file.name+'","fileextension":"'+file.type+'","filesize":'+file.size+',"filedata":"'+bytesfile+'"}';
-                // alert("the File has been transferred.")
-            }
-            reader.readAsArrayBuffer(file);
-          }else{
-            fileSelectbutton.innerHTML="&#128279";
-            finalfile=null;
-          }
-        });
-        const sndmsginbox=document.getElementById("sendMessageInputBox");
-        sndmsginbox.addEventListener("keyup", function(event) {
-        if (event.keyCode === 13) {
-          event.preventDefault();
-          sndmsginbox.nextSibling.click();
-        }
-        });
+
+      function sendfilerequest(rsp){
+        
+        rsp["file"]={"filemessagetype":"file","filename":file.name,"fileextension":file.type,"filesize":file.size,"filerequest":false};
+        sockThrowDataToServer(JSON.stringify(rsp));
       }
+      function recievefilerequest(rsp){
+        if(rsp.file["filerequest"]==true){
+            console.log('recieved from server');
+            sendfile(rsp);
+        }else{
+          console.log("server not accepting file request");
+          file=null;
+        }
+      }
+      var sliceSize=null,start=null,fjrnst=null,sendfileslicesize=null,end=null;
+      function sendfile(rsp){
+            size = file.size;
+            sliceSize = 25000;
+            start = 0;
+            fjrnst="ini";
+            setTimeout(loop(rsp), 1);
+        }
+        function loop(rsp){
+            end = start + sliceSize;
+            if (size - end < 0) {
+              end = size;
+              fjrnst="end";
+            }
+            // alert(start+" "+end+" "+sliceSize);
+            var s = file.slice(start, end);
+            var filereader = new FileReader();
+            filereader.readAsArrayBuffer(s);
+            filereader.onerror=function(e){
+                alert(e);
+                filereader.abort();
+                return;
+            }
+            filereader.onload = function(e){
+                var arrayBuffer = e.target.result;
+                // alert("the slice has been loaded.");
+                var slicedfile = new Uint8Array(arrayBuffer);
+                fileslice(rsp,slicedfile,fjrnst);
+            }
+        }
+        var sliceretry=0;
+        function fileslice(rsp,slice,fjrnst){
+            rsp["message_type"]="3";
+            if(sliceretry<3){
+                rsp["file"]={"filejourneystate":fjrnst,"sliceresponse":false,"filesliceddata":slice.toString()};
+                // alert("slice sending");
+                // console.log(JSON.stringify(rsp));
+                sockThrowDataToServer(JSON.stringify(rsp));
+            }
+        }
+         function recievesliceconfirmation(rsp){
+            // console.log("waiting");
+            if(rsp.file["sliceresponse"]==true){
+                sliceretry=0;
+                if (end < size) {
+                  start += sliceSize;
+                  setTimeout(loop(rsp), 1);
+                }else{
+                    console.log("send ended");
+                }
+            }else {
+                console.log("error do file abort");
+            }
+        }
+        var downloadfilersp=null;
+        function recievefilepacket(rsp){
+          if(!downloadfilersp){
+            rsp.file["filedata"]=rsp.file["filedata"].toString()
+            downloadfilersp=rsp;
+          }else{
+            downloadfilersp.file["filedata"]=downloadfilersp.file["filedata"]+','+rsp.file["filedata"];
+          }
+          if(rsp.file["filejourneystate"]=="end"){
+            downloadfilersp.file["filejourneystate"]="end";
+            addMessageToContact(downloadfilersp);
+          }
+
+        }
+
+
       var sidenames= [];
       function addContact(){
         // alert(sidenames);
@@ -168,7 +217,15 @@ const wsuri = "ws://localhost:1234/main";
           if(rsp["message_type"]==1){
             console.log("got new message");
             addMessageToContact(rsp);
-          }else {
+          }else if(rsp["message_type"]==2){
+            recievefilerequest(rsp);
+          }else if(rsp["message_type"]==3){
+            recievesliceconfirmation(rsp);
+          }else if(rsp["message_type"]==4){
+            recievefilepacket(rsp);
+          }else if(rsp["message_type"]==5){
+            
+          }else{
             console.log("got receipt");
             addReceiptToMessage(rsp);
           }
@@ -178,22 +235,17 @@ const wsuri = "ws://localhost:1234/main";
         };
       }
       function addReceiptToMessage(rsp){
-        console.log(rsp);
         var x=document.getElementById(rsp["to"]).children[1].querySelector('[name="sent"][id='+'"'+rsp["message_id"]+'"'+']');
-        // console.log(x);
+        console.log(rsp);
         var tick=document.createElement("IMG");
         tick.setAttribute("src","tick.png");
         countT=x.children[0].getElementsByTagName("IMG").length;
-        console.log(countT);
-        if((rsp["message_stage_id"]==1)&&(countT==0)){
+        if(rsp["message_stage_id"]==1){
           x.children[0].appendChild(tick);
-          console.log("append one tick");
-        }else if((rsp["message_stage_id"]==2)&&(countT==1)){
+        }else if(rsp["message_stage_id"]==2){
           x.children[0].appendChild(tick);
-          console.log("append two tick")
-        }else {
-          console.log("numberofticks ",countT);
         }
+        console.log(countT);
       }
       var total_popups=0;
       var popups=[];
@@ -201,10 +253,11 @@ const wsuri = "ws://localhost:1234/main";
       function addMessageToContact(rsp){
         var to=rsp["to"];
         var from=rsp["from"];
+        var message="";
         if(rsp["body"]){
-          var message=rsp["body"];
+          message=rsp["body"];
         }
-        console.log(rsp);
+        var fsendmethod=false;
         if(document.getElementById("telemo-chat").getAttribute("name")!=rsp["to"]){
           var temp=to;
           to=from;
@@ -228,25 +281,35 @@ const wsuri = "ws://localhost:1234/main";
               newMessageText.innerText=message;
               newMessageData.appendChild(newMessageText);
               if(rsp["file"]){
+                fsendmethod=true;
                 var filedata = document.createElement('DIV');
                 filedata.className="filedata";
                 var newfile=JSON.parse(rsp["file"]);
-                // console.log(newfile["filedata"]);
                 var bty=newfile["filedata"].split(',');
                 for(var i=0;i<bty.length;i++){
                   bty[i]=parseInt(bty[i]);
                 }
                 var uint8Array = new Uint8Array(bty);
-                var txt=new TextDecoder().decode(uint8Array) ;
-                console.log(txt);
-                var newfileobj= new Blob([txt],{type:newfile["fileextension"]});
-                var newfilelink = document.createElement('a');
-                newfilelink.innerHTML="&#8681";
-                newfilelink.download = newfile["filename"];
-                newfilelink.href = URL.createObjectURL(newfileobj);
-                var filename = document.createElement('P');
-                filename.className="filename";
-                filename.innerHTML=newfile["filename"];
+                var newfileobj= new Blob([uint8Array],{type:newfile["fileextension"]});
+                if(((newfile["fileextension"]).match(/image/))=="image"){
+                  var newfilelink = document.createElement('a');
+                  var newfileimglink = document.createElement('img');
+                  newfilelink.innerHTML="&#8681";
+                  newfilelink.download = newfile["filename"];
+                  newfilelink.href = URL.createObjectURL(newfileobj);
+                  newfileimglink.src = URL.createObjectURL(newfileobj);
+                  var filename = document.createElement('P');
+                  filename.className="filename";
+                  filename.appendChild(newfileimglink);
+                }else{
+                  var newfilelink = document.createElement('a');
+                  newfilelink.innerHTML="&#8681";
+                  newfilelink.download = newfile["filename"];
+                  newfilelink.href = URL.createObjectURL(newfileobj);
+                  var filename = document.createElement('P');
+                  filename.className="filename";
+                  filename.innerHTML=newfile["filename"];
+                }
                 filedata.appendChild(newfilelink);
                 filedata.appendChild(filename);
                 newMessageData.appendChild(filedata);
@@ -254,41 +317,55 @@ const wsuri = "ws://localhost:1234/main";
               h.appendChild(document.createElement("br"));
               newMessageNode.appendChild(newMessageData);
               h.appendChild(newMessageNode);
-              console.log("appended message node is ");
-              console.log(newMessageNode);
               document.getElementById("sendMessageInputBox").value="";
               rsp["message_id"]=""+newid+"";
               rsp["message_stage_id"]="0";
-              rsp=JSON.stringify(rsp)
-              console.log("sending message "+rsp);
               document.getElementById("fileSelectbutton").innerHTML="&#128279";
-              sockThrowDataToServer(rsp);
+              document.getElementById("imgSelectbutton").innerHTML="&#128206";
+              if(fsendmethod){
+                sendfilerequest(rsp);
+              }else{
+                rsp=JSON.stringify(rsp)
+                updateScroll(from);
+                sockThrowDataToServer(rsp);
+              }
             }else{
-              console.log("this will work when you recieve a message from a user in who already has a pop");
               newMessageNode.setAttribute("name","recieved");
               newMessageData.className="recievedData";
               newMessageNode.setAttribute("id",rsp["message_id"]);
               newMessageText.innerText=message;
               newMessageData.appendChild(newMessageText);
               if(rsp["file"]){
+                // console.log(rsp["file"]);
                 var filedata = document.createElement('DIV');
                 filedata.className="filedata";
-                var newfile=JSON.parse(rsp["file"]);
+                var newfile=rsp["file"];
+                rsp["file"]=null;
                 var bty=newfile["filedata"].split(',');
                 for(var i=0;i<bty.length;i++){
                   bty[i]=parseInt(bty[i]);
                 }
                 var uint8Array = new Uint8Array(bty);
-                var txt=new TextDecoder().decode(uint8Array);
-                console.log(txt);
-                var newfileobj= new Blob([txt],{type:newfile["fileextension"]});
-                var newfilelink = document.createElement('a');
-                newfilelink.innerHTML="&#8681";
-                newfilelink.download = newfile["filename"];
-                newfilelink.href = URL.createObjectURL(newfileobj);
-                var filename = document.createElement('P');
-                filename.className="filename";
-                filename.innerHTML=newfile["filename"];
+                var newfileobj= new Blob([uint8Array],{type:newfile["fileextension"]});
+                if(((newfile["fileextension"]).match(/image/))=="image"){
+                  var newfilelink = document.createElement('a');
+                  var newfileimglink = document.createElement('img');
+                  newfilelink.innerHTML="&#8681";
+                  newfilelink.download = newfile["filename"];
+                  newfilelink.href = URL.createObjectURL(newfileobj);
+                  newfileimglink.src = URL.createObjectURL(newfileobj);
+                  var filename = document.createElement('P');
+                  filename.className="filename";
+                  filename.appendChild(newfileimglink);
+                }else{
+                  var newfilelink = document.createElement('a');
+                  newfilelink.innerHTML="&#8681";
+                  newfilelink.download = newfile["filename"];
+                  newfilelink.href = URL.createObjectURL(newfileobj);
+                  var filename = document.createElement('P');
+                  filename.className="filename";
+                  filename.innerHTML=newfile["filename"];
+                }
                 filedata.appendChild(newfilelink);
                 filedata.appendChild(filename);
                 newMessageData.appendChild(filedata);
@@ -298,96 +375,17 @@ const wsuri = "ws://localhost:1234/main";
               h.appendChild(newMessageNode);
               rsp["message_type"]="0";
               rsp["message_stage_id"]="1";
-              rsp["file"]=null;
               rsp=JSON.stringify(rsp)
-              console.log("sending read receipts",rsp);
+              downloadfilersp=null;
+              updateScroll(from);
               sockThrowDataToServer(rsp);
             }
-            var c = document.body.children;
-            // var abc4;
-            // for(abc4=0;abc4<c.length;abc4++){
-            //   if(c[abc4].id==from){
-            //     c[abc4].children[1].appendChild(newMessageNode);
-            //   }
-            // }
+            document.getElementById("uploadInput").value=null;
+            document.getElementById("uploadInputImg").value=null;
+            
             return;
           }
         }
-        // sidenames.unshift(from);
-        // var newid=0;
-        // var mydiv=document.createElement("DIV");
-        // mydiv.className="popup-box";
-        // mydiv.setAttribute("id",from);
-        // var headDiv=document.createElement("DIV");
-        // headDiv.className="popup-head";
-        // var aTag=document.createElement('A');
-        // aTag.setAttribute('href','javascript:expandMessages('+'\''+from+'\''+');');
-        // aTag.innerText = from;
-        // var chatbox= document.createElement("DIV");
-        // chatbox.className="chat-box";
-        // chatbox.setAttribute("id",newid);
-        // var startMessageNode=document.createElement("DIV");
-        // startMessageNode.className="startMessageNode";
-        // startMessageNode.setAttribute("id",newid++)
-        // var startMessageData=document.createElement('P');
-        // startMessageData.className="startMessageData";
-        // startMessageData.innerText="DROP MESSAGES HERE..";
-        // startMessageNode.appendChild(startMessageData);
-        // chatbox.appendChild(startMessageNode);
-        // if(message){
-        //   var newMessageNode=document.createElement('DIV');
-        //   var newMessageData=document.createElement("DIV");
-        //   var newMessageText=document.createElement('P');
-        //   newMessageNode.className="messageNode";
-        //   newMessageData.setAttribute("name","messageData");
-        //   newMessageText.className="messageText";
-        //   if(document.getElementById("telemo-chat").getAttribute("name")!=rsp["to"]){
-        //     console.log("this will never work");
-        //     newMessageNode.setAttribute("name","sent");
-        //     newMessageData.className="sentData";
-        //     newMessageNode.setAttribute("id",newid++)
-        //     newMessageText.innerText=message;
-        //     // var newSentTick=document.createElement("IMG");
-        //     // newSentTick.setAttribute("src","tick.png");
-        //     newMessageData.appendChild(newMessageText);
-        //     // newMessageData.appendChild(newSentTick);
-        //     newMessageNode.appendChild(newMessageData);
-        //     chatbox.appendChild(newMessageNode);
-        //   }else{
-        //     console.log("this will work when you recieve a message from a user not in contactlist");
-        //     newMessageNode.setAttribute("name","recieved");
-        //     newMessageData.className="recievedData";
-        //     newMessageNode.setAttribute("id",rsp["message_id"]);
-        //     newMessageText.innerText=message;
-        //     newMessageData.appendChild(newMessageText);
-        //     newMessageNode.appendChild(newMessageData);
-        //     chatbox.appendChild(newMessageNode);
-        //     rsp["message_type"]="0";
-        //     rsp["message_stage_id"]="1";
-        //     rsp=JSON.stringify(rsp)
-        //     console.log("sending read receipts",rsp);
-        //     sockThrowDataToServer(rsp);
-        //   }
-        // }
-        // chatbox.style.display="none";
-        // var sendMessageForm=document.createElement("DIV");
-        // sendMessageForm.className="sendMessage";
-        // sendMessageForm.setAttribute("style","display:none");
-        // var sendMessageElement=document.createElement("INPUT");
-        // sendMessageElement.setAttribute("id","sendMessageInputBox");
-        // sendMessageElement.setAttribute("type","text");
-        // sendMessageElement.setAttribute("placeholder","message here..");
-        // var sendMessageButtonTag=document.createElement("A");
-        // sendMessageButtonTag.setAttribute('href','javascript:sendMessage('+'\''+from+'\''+');');
-        // sendMessageButtonTag.innerText=">";
-        // sendMessageForm.appendChild(sendMessageElement);
-        // sendMessageForm.appendChild(sendMessageButtonTag);
-        // headDiv.appendChild(aTag);
-        // mydiv.appendChild(headDiv);
-        // mydiv.appendChild(chatbox);
-        // mydiv.appendChild(sendMessageForm);
-        // document.getElementById("telemo-chat-list").appendChild(mydiv);
-        // document.getElementById("message").value="";
       }
       
       //this function can remove a array element.
@@ -410,24 +408,6 @@ const wsuri = "ws://localhost:1234/main";
         } 
       }
       var flag=false;
-      // function expandMessages(from){
-      //   var pop=document.getElementById(from);
-      //   var chatbox=document.getElementById(from).children[1];
-      //   var sendMessageForm=document.getElementById(from).children[2];
-      //   if(!flag){
-      //     chatbox.setAttribute("style","display:flex");
-      //     sendMessageForm.setAttribute("style","display:flex");
-      //     flag=true;
-      //     return;  
-      //   }else{
-      //     pop.setAttribute("style","height:10px")
-      //     chatbox.setAttribute("style","display:none");
-      //     sendMessageForm.setAttribute("style","display:none");
-      //     flag=false;
-      //     return;
-      //   }
-      //   console.log("not yet implemented");
-      // };
       function display_popups(){
         var right = 220;
         var iii = 0;
@@ -480,9 +460,13 @@ const wsuri = "ws://localhost:1234/main";
         var chatbox= document.createElement("DIV");
         chatbox.className="chat-box";
         chatbox.setAttribute("id",newid);
+        chatbox.setAttribute("scrollCheck", false);
+        chatbox.addEventListener("scroll", function(event){
+          chatbox.setAttribute("scrollCheck",true);
+        });
         var startMessageNode=document.createElement("DIV");
         startMessageNode.className="startMessageNode";
-        startMessageNode.setAttribute("id",newid++)
+        startMessageNode.setAttribute("id",newid++);
         var startMessageData=document.createElement('P');
         startMessageData.className="startMessageData";
         startMessageData.innerText="DROP MESSAGES HERE..";
@@ -496,6 +480,12 @@ const wsuri = "ws://localhost:1234/main";
         sendMessageInputBox.setAttribute("id","sendMessageInputBox");
         sendMessageInputBox.setAttribute("type","text");
         sendMessageInputBox.setAttribute("placeholder","message here..");
+        sendMessageInputBox.addEventListener("keyup", function(event) {
+          if (event.keyCode === 13) {
+            event.preventDefault();
+            sendMessageInputBox.nextSibling.click();
+          }
+        });
         var sendMessageButtonTag=document.createElement("A");
         sendMessageButtonTag.setAttribute('href','javascript:sendMessage('+'\''+id+'\''+');');
         sendMessageButtonTag.innerText=">";
@@ -511,8 +501,62 @@ const wsuri = "ws://localhost:1234/main";
         var fileSelectbutton=document.createElement("BUTTON");
         fileSelectbutton.setAttribute("id","fileSelectbutton");
         fileSelectbutton.innerHTML="&#128279";
+        var uploadInputImg=document.createElement("INPUT");
+        uploadInputImg.setAttribute("id","uploadInputImg");
+        uploadInputImg.setAttribute("type","file");
+        uploadInputImg.setAttribute("accept","image/*");
+        uploadInputImg.setAttribute("hidden","hidden");
+        var imgSelectbutton=document.createElement("BUTTON");
+        imgSelectbutton.setAttribute("id","imgSelectbutton");
+        imgSelectbutton.innerHTML="&#128206";
         complimentarysendMessageBox.appendChild(uploadInput);
         complimentarysendMessageBox.appendChild(fileSelectbutton);
+        complimentarysendMessageBox.appendChild(uploadInputImg);
+        complimentarysendMessageBox.appendChild(imgSelectbutton);
+        fileSelectbutton.addEventListener("click",function(){ uploadInput.click(); });
+        imgSelectbutton.addEventListener("click",function(){ uploadInputImg.click(); });
+        uploadInput.addEventListener("change",function(){
+                  if(uploadInput.value) {
+                    imgSelectbutton.innerHTML="&#128206";
+                    fileSelectbutton.innerHTML="&#128210";
+                    file=uploadInput.files[0];
+                    var reader = new FileReader();
+                    var rawData = new ArrayBuffer();            
+                    reader.loadend = function() {
+                    }
+                    reader.onload = function(e) {
+                        rawData = e.target.result;
+                        var bytesfile = new Uint8Array(rawData);
+                        finalfile='{"filename":"'+file.name+'","fileextension":"'+file.type+'","filesize":'+file.size+',"filedata":"'+bytesfile+'"}';
+                        
+                    }
+                    reader.readAsArrayBuffer(file);
+                  }else{
+                    fileSelectbutton.innerHTML="&#128279";
+                    finalfile=null;
+                  }
+                });
+        uploadInputImg.addEventListener("change",function(){
+          if(uploadInputImg.value){
+            fileSelectbutton.innerHTML="&#128279";
+            imgSelectbutton.innerHTML="&#10024";
+            file=uploadInputImg.files[0];
+            var reader = new FileReader();
+            var rawData = new ArrayBuffer();            
+            reader.loadend = function() {
+            }
+            reader.onload = function(e) {
+                rawData = e.target.result;
+                var bytesfile = new Uint8Array(rawData);
+                finalfile='{"filename":"'+file.name+'","fileextension":"'+file.type+'","filesize":'+file.size+',"filedata":"'+bytesfile+'"}';
+                
+            }
+            reader.readAsArrayBuffer(file);
+          }else{
+            imgSelectbutton.innerHTML="&#128206";
+            finalfile=null;
+          }
+        });
         sendMessageBox.appendChild(basicsendMessageBox);
         sendMessageBox.appendChild(complimentarysendMessageBox);
         headDiv.appendChild(popupprofileimg);
@@ -524,8 +568,22 @@ const wsuri = "ws://localhost:1234/main";
         document.getElementsByTagName("body")[0].appendChild(mydiv);  
         popups.unshift(id);
         calculate_popups();
-        popupboxInitEventlistener();
+         
       }
+
+      function updateScroll(from){
+       
+         var scrollCheck=document.querySelector(".chat-box")
+         scrollCheck.maxScrollTop = scrollCheck.scrollHeight - scrollCheck.offsetHeight
+
+        if (scrollCheck.maxScrollTop - scrollCheck.scrollTop <= scrollCheck.offsetHeight) {
+        scrollCheck.scrollTop = scrollCheck.scrollHeight
+        } else {
+        alert("new message")
+        }
+         
+      }
+
       function calculate_popups(){
         var width = window.innerWidth;
         if(width < 540)
@@ -549,24 +607,20 @@ const wsuri = "ws://localhost:1234/main";
         static StartSocket(api){
           console.log(api);
           sock=GetSetSocket(api.usrId);
-    // alert("telechat "+api.usrId);
-    console.log(api.opts);
+          
           api.opts["chatContainer"].setAttribute("name",api.usrId);
-          //api.opts["chatContainer"].children[0].innerHTML=api.opts["chatName"];
           api.opts["chatContainer"].style.width=api.opts["width"];
           api.opts["chatContainer"].style.height=api.opts["height"];
-          // if(api.usrId=="moin"){
-          //   console.log(api.usrId);
-          //   api.opts["chatContainer"].children[0].children[0].children[0].setAttribute("href","javascript:register_popup('umesh','umesh');");
-          //   api.opts["chatContainer"].children[0].children[0].children[0].children[0].textContent="umesh";
-            
-          // }else{
-          //   console.log("user 2");
-          //   console.log(api.usrId);  
-          //   api.opts["chatContainer"].children[0].children[0].children[0].setAttribute("href","javascript:register_popup('moin','moin');");
-          //   api.opts["chatContainer"].children[0].children[0].children[0].children[0].textContent="moin";
-      
+          if(api.usrId=="moin"){
+            console.log(api.usrId);
+            api.opts["chatContainer"].children[0].children[0].children[0].setAttribute("href","javascript:register_popup('umesh','umesh');");
+            api.opts["chatContainer"].children[0].children[0].children[0].children[0].textContent="umesh";
+          }else{
+            console.log("user 2");
+            console.log(api.usrId);  
+            api.opts["chatContainer"].children[0].children[0].children[0].setAttribute("href","javascript:register_popup('moin','moin');");
+            api.opts["chatContainer"].children[0].children[0].children[0].children[0].textContent="moin";
 
-          // }
+          }
         }
       };
