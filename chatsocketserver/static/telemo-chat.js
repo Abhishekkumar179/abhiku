@@ -92,7 +92,7 @@ const wsuri = "ws://localhost:1234/main";
         }else{
           if(!finalfile){
             msg={"message_type":"1","to":x,"from":y,"body":z,"message_id":"","message_stage_id":""};
-            // alert("no file");
+            
             finalfile="";
           }else{
             msg={"message_type":"2","to":x,"from":y,"body":z,"file":finalfile,"message_id":"","message_stage_id":""};
@@ -134,7 +134,7 @@ const wsuri = "ws://localhost:1234/main";
               end = size;
               fjrnst="end";
             }
-            // alert(start+" "+end+" "+sliceSize);
+           
             var s = file.slice(start, end);
             var filereader = new FileReader();
             filereader.readAsArrayBuffer(s);
@@ -145,7 +145,6 @@ const wsuri = "ws://localhost:1234/main";
             }
             filereader.onload = function(e){
                 var arrayBuffer = e.target.result;
-                // alert("the slice has been loaded.");
                 var slicedfile = new Uint8Array(arrayBuffer);
                 fileslice(rsp,slicedfile,fjrnst);
             }
@@ -155,13 +154,11 @@ const wsuri = "ws://localhost:1234/main";
             rsp["message_type"]="3";
             if(sliceretry<3){
                 rsp["file"]={"filejourneystate":fjrnst,"sliceresponse":false,"filesliceddata":slice.toString()};
-                // alert("slice sending");
-                // console.log(JSON.stringify(rsp));
                 sockThrowDataToServer(JSON.stringify(rsp));
             }
         }
          function recievesliceconfirmation(rsp){
-            // console.log("waiting");
+            
             if(rsp.file["sliceresponse"]==true){
                 sliceretry=0;
                 if (end < size) {
@@ -192,7 +189,7 @@ const wsuri = "ws://localhost:1234/main";
 
       var sidenames= [];
       function addContact(){
-        // alert(sidenames);
+        
         var x = document.getElementById("addContactForm").children[0].value;
         for (i = 0; i < sidenames.length; i++){
           if(sidenames[i]==x){
@@ -213,7 +210,7 @@ const wsuri = "ws://localhost:1234/main";
       function recieveMessages(){
         sock.onmessage = function(e){
           var rsp=JSON.parse(e.data);
-          // console.log(rsp);
+          
           if(rsp["message_type"]==1){
             console.log("got new message");
             addMessageToContact(rsp);
@@ -336,7 +333,7 @@ const wsuri = "ws://localhost:1234/main";
               newMessageText.innerText=message;
               newMessageData.appendChild(newMessageText);
               if(rsp["file"]){
-                // console.log(rsp["file"]);
+                
                 var filedata = document.createElement('DIV');
                 filedata.className="filedata";
                 var newfile=rsp["file"];
