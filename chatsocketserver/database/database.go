@@ -1,40 +1,14 @@
 package database
-
-import (
-	"chatsocketserver/models"
-
-	"fmt"
-
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-	_ "github.com/lib/pq"
-
-	"github.com/jinzhu/gorm"
+import(
+	"database/sql"
+	_"github.com/lib/pq"
+	"log"
 )
-
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "8447849769"
-	dbname   = "dbname"
-)
-
-func NewDatabase() *gorm.DB {
-	dbConn, err := gorm.Open("postgres", "")
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-	db, err := gorm.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	//	err = db.Ping()
-	if err != nil {
+func NewDatabase() *sql.DB{
+	dbConn, err:= sql.Open("postgres","host=localhost port=5432 user=postgres password=psql dbname=chatsocketserver sslmode=disable");
+	if err!=nil{
+		log.Fatal(err);
 		return nil
 	}
-	db.AutoMigrate(models.User{})
-	fmt.Println("connected")
 	return dbConn
 }
